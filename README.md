@@ -10,7 +10,8 @@ $ rcl put "first test command" "echo 1234"
 # Inputting command by history item (zsh or bash only)
 $ history | grep 'echo 56'
 10065  echo 5678
-$ rcl put "second test command" 10065
+$ rcl put "second test command" "!10065"
+$ rcl put "second test command" "echo 5678"
 $ rcl search "test command"
 2 results found!
 first test command (#1)
@@ -29,6 +30,12 @@ $ rcl search "test command"
 first test command (#1)
   echo another test
 
+second test command (#2)
+  echo test2
+$ rcl delete 1
+delete first test command? (y/N) y
+$ rcl search "test command"
+1 result found!
 second test command (#2)
   echo test2
 ```
