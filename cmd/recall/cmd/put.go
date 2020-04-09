@@ -3,8 +3,13 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
+	"strings"
 
+	"github.com/Songmu/prompter"
+	"github.com/pawalt/recall/pkg/datastore"
+	"github.com/pawalt/recall/pkg/pp"
 	"github.com/spf13/cobra"
 )
 
@@ -28,9 +33,51 @@ var put = &cobra.Command{
 
 func putCmd(name, command string) {
 	if i, err := strconv.Atoi(name); err == nil {
-		err := store.Put(i, command)
+		entry, err := store.Get(i)
 		if err != nil {
 			log.Fatalln(err)
 		}
+		if entry == nil {
+			fmt.Printf("Could not find entry with index %d\n", i)
+			os.Exit(1)
+		} else {
+			chooseOverwrite(entry, command)
+		}
+	} else {
+		entries, err := store.Search(name)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if len(entries) == 0 {
+			index, err := store.Add(name, command)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Printf("Added at index %d\n", index)
+		} else if len(entries) > 1 {
+			fmt.Printf("Multiple matches for query \"%s\"\n", name)
+			pp.PrintEntries(entries)
+		} else {
+			entry := &entries[0]
+			if strings.EqualFold(entry.Name, name) {
+				chooseOverwrite(&entries[0], command)
+			} else {
+				fmt.Printf("Only matched command has name \"%s\" but required name \"%s\".\n", entry.Name, name)
+				fmt.Println("Requested name and name found in database must exactly match for deletion.")
+				os.Exit(1)
+			}
+		}
+	}
+}
+
+func chooseOverwrite(entry *datastore.Entry, command string) {
+	choice := prompter.Choose(
+		"overwrite \""+entry.Name+"\"?",
+		[]string{"y", "n"},
+		"n")
+	if choice == "y" {
+		store.Update(entry.Index, command)
+	} else {
+		fmt.Println("Cancelled")
 	}
 }

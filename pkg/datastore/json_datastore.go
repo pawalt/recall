@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -26,6 +28,11 @@ func NewJSONDatastore(path string) (*JSONDatastore, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			dir := filepath.Dir(path)
+			err := os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			store := &JSONStorage{
 				Entries: []Entry{},
 			}
@@ -96,8 +103,8 @@ func (j *JSONDatastore) Add(name, command string) (int, error) {
 	return max, nil
 }
 
-// Put fulfills the datastore interface
-func (j *JSONDatastore) Put(index int, command string) error {
+// Update fulfills the datastore interface
+func (j *JSONDatastore) Update(index int, command string) error {
 	for _, item := range j.store.Entries {
 		if item.Index == index {
 			item.Command = command

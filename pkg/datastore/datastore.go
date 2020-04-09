@@ -15,8 +15,8 @@ type Datastore interface {
 	// Add adds a new entry with `name`. It returns an error in case of i/o
 	// failure or if `name` already exists
 	Add(name, command string) (int, error)
-	// Put updates the entry at `index1. Error for i/o error or not exist
-	Put(index int, command string) error
+	// Update updates the entry at `index1. Error for i/o error or not exist
+	Update(index int, command string) error
 	// Get gets the entry at `index`, erroring out in case of i/o error. Returns nil
 	// if `index` is not in the table
 	Get(index int) (*Entry, error)
