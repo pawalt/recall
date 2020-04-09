@@ -5,25 +5,19 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/pawalt/recall/pkg/datastore"
 	"github.com/spf13/cobra"
 )
 
-var digitCheck = regexp.MustCompile(`^[0-9]+$`)
-var store datastore.Datastore
+var (
+	store    datastore.Datastore
+	dataFile string
+)
 
 func init() {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	storePath := filepath.Join(home, ".config", "recall", "data.json")
-	store, err = datastore.NewJSONDatastore(storePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&dataFile, "data", "", "data file (default is $HOME/.config/recall/data.json)")
 }
 
 var rootCmd = &cobra.Command{
@@ -37,5 +31,20 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+}
+
+func initConfig() {
+	if dataFile == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		dataFile = filepath.Join(home, ".config", "recall", "data.json")
+	}
+	var err error
+	store, err = datastore.NewJSONDatastore(dataFile)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }

@@ -19,7 +19,7 @@ func init() {
 
 var put = &cobra.Command{
 	Use:   "put",
-	Short: "put a command in the database",
+	Short: "add or update a command in the database",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 {
 			return fmt.Errorf("put requires exactly two arguments, a name/index and a command. Received %d", len(args))
@@ -49,7 +49,7 @@ func putCmd(name, command string) {
 			log.Fatalln(err)
 		}
 		if len(entries) == 0 {
-			index, err := store.Add(name, command)
+			index, err := datastore.Add(store, name, command)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -76,7 +76,8 @@ func chooseOverwrite(entry *datastore.Entry, command string) {
 		[]string{"y", "n"},
 		"n")
 	if choice == "y" {
-		store.Update(entry.Index, command)
+		entry.Command = command
+		store.Put(*entry)
 	} else {
 		fmt.Println("Cancelled")
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,18 +104,31 @@ func (j *JSONDatastore) Add(name, command string) (int, error) {
 	return max, nil
 }
 
-// Update fulfills the datastore interface
-func (j *JSONDatastore) Update(index int, command string) error {
+// Put fulfills the datastore interface
+func (j *JSONDatastore) Put(toAdd Entry) error {
 	for sliceInd, item := range j.store.Entries {
-		if item.Index == index {
+		if item.Index == toAdd.Index {
 			j.removeEntry(sliceInd)
-			item.Command = command
-			j.addEntry(item)
+			j.addEntry(toAdd)
 			return nil
 		}
 	}
+	j.addEntry(toAdd)
+	return nil
+}
 
-	return fmt.Errorf("could not find item at index %d", index)
+// FreshIndex fulfills the datastore interface
+func (j *JSONDatastore) FreshIndex() (int, error) {
+	minInd := math.MaxInt64
+	for _, entry := range j.store.Entries {
+		if entry.Index < minInd {
+			minInd = entry.Index
+		}
+	}
+	if minInd == math.MaxInt64 {
+		minInd = 0
+	}
+	return minInd, nil
 }
 
 // Get fulfills the datastore interface
