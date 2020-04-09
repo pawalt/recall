@@ -105,9 +105,11 @@ func (j *JSONDatastore) Add(name, command string) (int, error) {
 
 // Update fulfills the datastore interface
 func (j *JSONDatastore) Update(index int, command string) error {
-	for _, item := range j.store.Entries {
+	for sliceInd, item := range j.store.Entries {
 		if item.Index == index {
+			j.removeEntry(sliceInd)
 			item.Command = command
+			j.addEntry(item)
 			return nil
 		}
 	}
